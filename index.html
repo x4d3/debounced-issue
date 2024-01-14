@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Debounced issue</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <script type="module">
+        import debounced from 'https://www.unpkg.com/debounced@0.0.5/src/index.js';
+        const getTimeWithMilliseconds = (date) => {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            const milliseconds = date.getMilliseconds().toString().padStart(3, '0');
+            return `${hours}:${minutes}:${seconds}.${milliseconds}`;
+        }
+        debounced.initialize();
+        document.addEventListener("DOMContentLoaded", () => {
+            const button = document.getElementById("button");
+            const logs = document.getElementById("logs");
+            const clearLogs = document.getElementById("clearLogs");
+            const textarea1 = document.getElementById("textarea1");
+            const textarea2 = document.getElementById("textarea2");
+
+            clearLogs.addEventListener("click", () => {
+                logs.innerHTML = "";
+            });
+
+            const logEvent = (message) => {
+                logs.innerHTML = logs.innerHTML + "\n" + getTimeWithMilliseconds(new Date()) + ": " + message;
+            }
+
+            button.addEventListener("click", () => {
+                logEvent("button: click")
+                textarea1.dispatchEvent(new Event("input", {bubbles: true}));
+                // Textarea1 won't get the debounced:input
+                textarea2.dispatchEvent(new Event("input", {bubbles: true}));
+            });
+
+            textarea1.addEventListener("debounced:input", () => {
+                logEvent("textarea1: debounced:input")
+            });
+
+            textarea2.addEventListener("debounced:input", () => {
+                logEvent("textarea2: debounced:input")
+            });
+        });
+    </script>
+</head>
+<body>
+    <main class="container">
+        <p>
+            This is a test page to reproduce an issue with the debounced library.
+            When a button is clicked, it dispatches an input event to two textareas.
+            The first textarea will not get the debounced:input event.
+        </p>
+        <section>
+            <div>
+                <button id="button">
+                    <span>Click Me</span>
+                </button>
+            </div>
+
+            <textarea id="textarea1"></textarea>
+            <textarea id="textarea2"></textarea>
+
+            <div>
+                Logs
+                <button id="clearLogs">
+                    <span>Clear</span>
+                </button>
+                <pre id="logs"></pre>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
